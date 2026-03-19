@@ -15,28 +15,13 @@ The plugin also connects to the **Credyt MCP server** (`mcp.credyt.ai`), which e
 
 ## Installation
 
-### 1. Install the plugin
-
-In your project directory, run:
-
-```bash
-claude mcp add --from-plugin https://github.com/credyt/claude-plugin
-```
-
-Or clone this repo and install locally:
-
-```bash
-git clone https://github.com/credyt/claude-plugin
-claude mcp add --from-plugin ./claude-plugin
-```
-
-### 2. Get your API key
+### 1. Get your API key
 
 1. Go to [app.credyt.ai/api/sign-up](https://app.credyt.ai/api/sign-up) and create an account
 2. Open the **Developers** section in the dashboard
 3. Copy your API key
 
-### 3. Set the API key
+### 2. Set the API key
 
 **Claude Code** — add to your shell config (`.zshrc`, `.bashrc`, etc.):
 
@@ -44,9 +29,9 @@ claude mcp add --from-plugin ./claude-plugin
 export CREDYT_API_KEY="Bearer sk_your_api_key_here"
 ```
 
-Then restart Claude Code to pick it up.
+Restart your terminal (or run `source ~/.zshrc`) so the variable is available when Claude Code starts.
 
-**Claude Desktop** — open Settings → Developer → Edit config and update the Credyt entry:
+**Claude Desktop** — open Settings → Developer → Edit config and replace `your_api_key` in the Credyt entry:
 
 ```json
 {
@@ -68,6 +53,27 @@ Then restart Claude Code to pick it up.
 ```
 
 Restart Claude Desktop after saving.
+
+### 3. Install the plugin
+
+**From GitHub** — run these two commands inside Claude Code:
+
+```
+/plugin marketplace add credyt/ai-skills
+/plugin install credyt@credyt/ai-skills
+```
+
+**From a local clone:**
+
+```bash
+git clone https://github.com/credyt/ai-skills
+```
+
+Then start Claude Code with the plugin loaded:
+
+```bash
+claude --plugin-dir ./ai-skills/credyt-plugin
+```
 
 ### 4. Verify the connection
 
