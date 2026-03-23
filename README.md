@@ -23,13 +23,29 @@ The plugin also connects to the **Credyt MCP server** (`mcp.credyt.ai`), which e
 
 ### 2. Set the API key
 
-**Claude Code** — add to your shell config (`.zshrc`, `.bashrc`, etc.):
+**Claude Code** — add the key to a Claude settings file so it's available to the MCP server.
 
-```bash
-export CREDYT_API_KEY="Bearer sk_your_api_key_here"
+**Option 1 — Global (all projects):** Add to `~/.claude/settings.json`:
+
+```json
+{
+  "env": {
+    "CREDYT_API_KEY": "Bearer sk_your_api_key_here"
+  }
+}
 ```
 
-Restart your terminal (or run `source ~/.zshrc`) so the variable is available when Claude Code starts.
+**Option 2 — Project-scoped (not checked into source control):** Add to `.claude/settings.local.json` in your project directory:
+
+```json
+{
+  "env": {
+    "CREDYT_API_KEY": "Bearer sk_your_api_key_here"
+  }
+}
+```
+
+This file is git-ignored by default, so each developer on a team can set their own key without it ending up in source control.
 
 **Claude Desktop** — open Settings → Developer → Edit config and replace `your_api_key` in the Credyt entry:
 
