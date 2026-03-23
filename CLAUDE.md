@@ -36,3 +36,32 @@ Local development: `claude --plugin-dir ./ai-skills/credyt-plugin`
 ## Editing Skills
 
 Skills are entirely defined in their `SKILL.md` files. These contain the full prompt, workflow steps, user-facing copy, error handling, and MCP tool call patterns. Changes to billing workflows happen here — there is no code to compile or deploy.
+
+When editing a skill:
+- Read the full `SKILL.md` before making changes to understand the existing flow
+- Keep workflow steps numbered and clearly separated
+- Preserve the conversational tone — these are user-facing prompts, not internal code comments
+- Test locally with `claude --plugin-dir ./ai-skills/credyt-plugin` before committing
+
+## Skill Design Principles
+
+- **Guide, don't automate** — skills walk the user through decisions; they don't silently execute on their behalf
+- **Fail gracefully** — each step should anticipate errors and tell the user what to do next
+- **Be explicit about MCP calls** — document which Credyt tools are called and what data they require
+- **Keep steps atomic** — one conceptual action per step; makes it easier to resume if interrupted
+
+## Git Workflow
+
+- Keep commits focused and descriptive. One logical change per commit.
+- Commit message format: `<type>: <short description>` (e.g., `feat: add retry logic to verify skill`)
+- Types: `feat`, `fix`, `docs`, `refactor`, `chore`
+- Open a PR for any non-trivial change; don't push directly to `main`
+- PR descriptions should explain *why* the change is needed, not just *what* changed
+
+## Working with Claude Code
+
+- If a task is ambiguous, ask a clarifying question rather than guessing
+- Prefer small, incremental changes over large rewrites
+- When in doubt about scope, do less and confirm with the user
+- Don't modify files outside the stated scope of a task without flagging it first
+- If you encounter something unexpected (unfamiliar config, conflicting instructions), pause and surface it rather than silently working around it
