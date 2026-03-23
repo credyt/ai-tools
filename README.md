@@ -23,7 +23,12 @@ The plugin also connects to the **Credyt MCP server** (`mcp.credyt.ai`), which e
 
 ### 2. Set the API key
 
-**Claude Code** — add the key to a Claude settings file so it's available to the MCP server.
+**Claude Code** — run `/credyt:init` after installing the plugin. It will guide you through entering your API key and verify the MCP connection is working.
+
+<details>
+<summary>Manual setup</summary>
+
+Add the key to a Claude settings file so it's available to the MCP server.
 
 **Option 1 — Global (all projects):** Add to `~/.claude/settings.json`:
 
@@ -46,6 +51,8 @@ The plugin also connects to the **Credyt MCP server** (`mcp.credyt.ai`), which e
 ```
 
 Claude Code automatically adds this file to `.gitignore`, so each developer on a team can set their own key without it ending up in source control.
+
+</details>
 
 **Claude Desktop** — open Settings → Developer → Edit config and replace `your_api_key` in the Credyt entry:
 
@@ -91,9 +98,9 @@ Then start Claude Code with the plugin loaded:
 claude --plugin-dir ./ai-skills/credyt-plugin
 ```
 
-### 4. Verify the connection
+### 4. Connect and verify
 
-Run `/credyt:init` in Claude Code. It will confirm the MCP is connected and walk you through any remaining setup.
+Run `/credyt:init` in Claude Code. It will guide you through setting your API key (if you haven't already), confirm the MCP is connected, and walk you through any remaining setup.
 
 ## Usage
 
