@@ -13,11 +13,11 @@ This is the standalone version of the verification that runs automatically at th
 
 If the user specified a product (e.g., `/credyt:verify image_gen_std`), use that. The `$ARGUMENTS` value is the product code or name.
 
-If no product was specified, call `credyt:list_products` and ask which one to test:
+If no product was specified, call `api:list_products` and ask which one to test:
 
 > "Which product do you want to verify? Here's what you have set up: [list products]"
 
-Once a product is identified, retrieve its details with `credyt:get_product` and determine:
+Once a product is identified, retrieve its details with `api:get_product` and determine:
 - The event type it expects
 - The usage type (unit, volume, or both)
 - The asset it charges in (USD, credits, etc.)
@@ -34,7 +34,7 @@ Execute each step and track pass/fail. If any step fails, stop and help troubles
 
 ### Step 1: Create a test customer
 
-Use `credyt:create_customer` with:
+Use `api:create_customer` with:
 - Name: "Verification Test Customer"
 - External ID: something unique like "verify_test_{timestamp}"
 - Subscribe to the product being tested
@@ -46,20 +46,20 @@ Record the customer ID for subsequent steps.
 
 ### Step 2: Check starting balance
 
-Use `credyt:get_wallet` to show the initial wallet state.
+Use `api:get_wallet` to show the initial wallet state.
 
 **Pass**: Wallet exists (it's created automatically with the subscription). Balance is $0.00 or empty.
 **Fail**: No wallet found — check subscription status.
 
 ### Step 3: Fund the wallet
 
-Use `credyt:create_adjustment` to add test funds. Use the same asset the product charges in. Add enough to cover a few test events (e.g., $10.00 USD or 200 credits).
+Use `api:create_adjustment` to add test funds. Use the same asset the product charges in. Add enough to cover a few test events (e.g., $10.00 USD or 200 credits).
 
 - `reason`: "gift"
 - `description`: "Verification test funding"
 - `transaction_id`: Generate a unique UUID
 
-Use `credyt:get_wallet` to confirm the balance updated.
+Use `api:get_wallet` to confirm the balance updated.
 
 **Pass**: Balance matches the amount added.
 **Fail**: Check the asset code matches what the product expects.
@@ -68,7 +68,7 @@ Record the balance after funding.
 
 ### Step 4: Send a test usage event
 
-Use `credyt:submit_events` to send one realistic event. Construct it to match what the product expects:
+Use `api:submit_events` to send one realistic event. Construct it to match what the product expects:
 
 - For **unit-based** products: send a single event with the correct event_type
 - For **volume-based** products: include the volume field with a test quantity (e.g., `{ "total_tokens": 1000 }`)
@@ -83,7 +83,7 @@ Record the event ID.
 
 ### Step 5: Verify fees were generated
 
-Use `credyt:get_event` with the event ID to retrieve the event details. Check that:
+Use `api:get_event` with the event ID to retrieve the event details. Check that:
 - Fees were generated (not empty)
 - The fee amount matches the expected price
 
@@ -94,7 +94,7 @@ Record the fee amount.
 
 ### Step 6: Verify balance changed
 
-Use `credyt:get_wallet` to check the balance after billing.
+Use `api:get_wallet` to check the balance after billing.
 
 Calculate: starting balance - fee amount = expected new balance.
 

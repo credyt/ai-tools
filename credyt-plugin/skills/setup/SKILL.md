@@ -9,7 +9,7 @@ Guide the user through understanding their billing model, then configure everyth
 
 ## First: Check what already exists
 
-Before jumping into discovery, check the current state by calling `credyt:list_assets` and `credyt:list_products`.
+Before jumping into discovery, check the current state by calling `api:list_assets` and `api:list_products`.
 
 If they already have products configured, acknowledge what's there:
 
@@ -86,19 +86,19 @@ Walk the user through each step. Explain what you're creating in plain terms and
 
 Only if they chose a custom currency. This must be created before any products that use it.
 
-Use `credyt:create_asset`. Before creating, explain the conversion clearly:
+Use `api:create_asset`. Before creating, explain the conversion clearly:
 
 > "So if 1 credit = $0.05, that means $1 gets you 20 credits. A user topping up $10 would get 200 credits. Does that feel right?"
 
-**After creating**, use `credyt:quote_asset` to verify the conversion. Quote how many units $1, $10, and $50 would buy:
+**After creating**, use `api:quote_asset` to verify the conversion. Quote how many units $1, $10, and $50 would buy:
 
 > "Let me verify that... ✓ $1 buys 20 credits, $10 buys 200, $50 buys 1,000. Does that look right?"
 
-If the conversion is wrong, use `credyt:add_asset_rate` to correct it and re-quote.
+If the conversion is wrong, use `api:add_asset_rate` to correct it and re-quote.
 
 ### Create products with pricing
 
-Use `credyt:create_product` for each billable activity. Walk them through what you're setting up:
+Use `api:create_product` for each billable activity. Walk them through what you're setting up:
 
 > "I'm going to create a product called 'Image Generation' that tracks every time a user generates an image and charges 10 credits. Here's what that means..."
 
@@ -112,11 +112,11 @@ Explain key fields in plain terms:
 - **Usage type**: Per occurrence ("unit") or based on a quantity like tokens ("volume")
 - **Pricing**: How much each event costs
 
-**After creating every product**, use `credyt:simulate_usage` to validate. Construct a sample event matching what would happen in their app:
+**After creating every product**, use `api:simulate_usage` to validate. Construct a sample event matching what would happen in their app:
 
 > "Let me test this — one image generation should cost 10 credits... ✓ Confirmed: 10 credits deducted, that's $0.50. Does that match what you expected?"
 
-If the simulation doesn't match, create a new product version with `credyt:create_product_version` using the corrected pricing and re-simulate until it's right.
+If the simulation doesn't match, create a new product version with `api:create_product_version` using the corrected pricing and re-simulate until it's right.
 
 ### Set up cost tracking (prompt for this)
 
@@ -124,7 +124,7 @@ Before verification, ask if they want to track what activities cost them:
 
 > "Do you want to track what each activity actually costs you? For example, if generating an image costs you $0.03 in API fees, Credyt can record that alongside the revenue so you can see your margins in real time."
 
-**If yes**, create vendors with `credyt:create_vendor` for each service provider (OpenAI, Anthropic, AWS, etc.):
+**If yes**, create vendors with `api:create_vendor` for each service provider (OpenAI, Anthropic, AWS, etc.):
 
 > "You mentioned you're using OpenAI for image generation — I'll register them as a cost provider so we can track those costs."
 
@@ -142,7 +142,7 @@ Run the verification against each product that was created or modified in this s
 
 ### Step 1: Create a test customer
 
-Use `credyt:create_customer` with:
+Use `api:create_customer` with:
 - Name: "Verification Test Customer"
 - External ID: a unique value like "verify_test_{timestamp}"
 - Subscribe to the product being tested
@@ -151,21 +151,21 @@ Record the customer ID.
 
 ### Step 2: Check starting balance
 
-Use `credyt:get_wallet` to confirm the wallet exists and the balance is zero.
+Use `api:get_wallet` to confirm the wallet exists and the balance is zero.
 
 ### Step 3: Fund the wallet
 
-Use `credyt:create_adjustment` to add test funds in the same asset the product charges in. Add enough to cover a few test events (e.g., $10.00 USD or 200 credits).
+Use `api:create_adjustment` to add test funds in the same asset the product charges in. Add enough to cover a few test events (e.g., $10.00 USD or 200 credits).
 
 - `reason`: "gift"
 - `description`: "Verification test funding"
 - `transaction_id`: A unique UUID
 
-Use `credyt:get_wallet` to confirm the balance updated.
+Use `api:get_wallet` to confirm the balance updated.
 
 ### Step 4: Send a test usage event
 
-Use `credyt:submit_events` to send one realistic event matching the product's configuration:
+Use `api:submit_events` to send one realistic event matching the product's configuration:
 
 - For **unit-based** products: a single event with the correct event_type
 - For **volume-based** products: include the volume field with a test quantity
@@ -175,11 +175,11 @@ Use a unique UUID for the event ID. Record it.
 
 ### Step 5: Verify fees were generated
 
-Use `credyt:get_event` with the event ID. Check that fees were generated and the amount matches the expected price.
+Use `api:get_event` with the event ID. Check that fees were generated and the amount matches the expected price.
 
 ### Step 6: Verify balance changed
 
-Use `credyt:get_wallet` to confirm the balance decreased by exactly the expected fee amount.
+Use `api:get_wallet` to confirm the balance decreased by exactly the expected fee amount.
 
 ### Report results
 

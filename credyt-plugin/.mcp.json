@@ -1,6 +1,6 @@
 {
   "mcpServers": {
-    "credyt": {
+    "api": {
       "command": "npx",
       "args": [
         "mcp-remote",

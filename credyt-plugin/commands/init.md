@@ -8,7 +8,7 @@ Get the user connected to Credyt so they can use `/credyt:setup`, `/credyt:verif
 
 ## Step 1: Check if already connected
 
-Try calling `credyt:list_assets`. If it works, the MCP is connected and authenticated.
+Try calling `api:list_assets`. If it works, the MCP is connected and authenticated.
 
 If connected, tell the user:
 
@@ -54,7 +54,7 @@ The plugin bundles the MCP server config, but the user needs to set their API ke
 
 ## Step 4: Verify the connection
 
-After restart, try `credyt:list_assets` again.
+After restart, try `api:list_assets` again.
 
 If it works:
 
