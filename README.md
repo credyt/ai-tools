@@ -52,6 +52,14 @@ Add the key to a Claude settings file so it's available to the MCP server.
 
 Claude Code automatically adds this file to `.gitignore`, so each developer on a team can set their own key without it ending up in source control.
 
+**Option 3 — Terminal / shell profile:** Export the variable in your current session or add it to your shell profile (`~/.zshrc`, `~/.bashrc`, etc.):
+
+```bash
+export CREDYT_API_KEY="Bearer sk_your_api_key_here"
+```
+
+To persist across sessions, add the line to your shell profile and run `source ~/.zshrc` (or restart your terminal).
+
 </details>
 
 **Claude Desktop** — open Settings → Developer → Edit config and replace `your_api_key` in the Credyt entry:
