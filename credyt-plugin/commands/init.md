@@ -29,7 +29,7 @@ Ask the user for their Credyt API key:
 Wait for the user to provide the key.
 
 Once received, normalise the key:
-- If it starts with `sk_`, prepend `Bearer ` to get `Bearer sk_...`
+- If it starts with `key_`, prepend `Bearer ` to get `Bearer key_...`
 - If it already starts with `Bearer `, use it as-is
 
 ### 2b: Choose where to save the key
@@ -55,7 +55,7 @@ Read the target settings file:
   ```json
   {
     "env": {
-      "CREDYT_API_KEY": "Bearer sk_..."
+      "CREDYT_API_KEY": "Bearer key_..."
     }
   }
   ```
@@ -64,7 +64,7 @@ Read the target settings file:
   ```json
   {
     "env": {
-      "CREDYT_API_KEY": "Bearer sk_..."
+      "CREDYT_API_KEY": "Bearer key_..."
     }
   }
   ```
@@ -101,7 +101,7 @@ If the MCP call failed or the tool isn't available, help the user troubleshoot:
 > "The MCP connection failed. A few things to check:
 >
 > - Is `CREDYT_API_KEY` set in your environment? Run `echo $CREDYT_API_KEY` to verify.
-> - Does the value start with `Bearer sk_...`? The `Bearer ` prefix is required.
+> - Does the value start with `Bearer key_...`? The `Bearer ` prefix is required.
 > - Have you restarted Claude Code since setting the variable?
 >
 > Once you've checked these, run `/credyt:init` again."
