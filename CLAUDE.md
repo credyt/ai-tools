@@ -6,20 +6,22 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Credyt Claude Plugin — an official Claude Code plugin that integrates [Credyt](https://credyt.ai) real-time billing infrastructure into Claude Code and Claude Desktop. It provides guided conversational workflows for setting up usage-based billing, prepaid credit systems, and subscriptions for AI products.
+Credyt AI Skills — skill definitions for setting up, verifying, and integrating [Credyt](https://credyt.ai) real-time billing infrastructure into AI products. Skills work with any AI agent via skills.sh, and are also bundled as a Claude Code plugin with MCP auto-configuration.
 
 ## Repository Structure
 
-This is a **pure plugin scaffold** — no build system, no tests, no application code. The repo contains only plugin metadata, MCP configuration, and skill definitions (Markdown files).
+This is a **pure skill scaffold** — no build system, no tests, no application code. The repo contains only skill definitions (Markdown files), plugin metadata, and MCP configuration.
 
-- `.claude-plugin/marketplace.json` — Plugin marketplace distribution config
-- `credyt-plugin/` — The plugin itself:
+- `skills/` — Shared skill definitions (the single source of truth):
+  - `setup/SKILL.md` — Guided billing model discovery and product configuration
+  - `verify/SKILL.md` — End-to-end billing cycle test
+  - `integrate/SKILL.md` — Wire Credyt into application code
+- `claude-plugins/credyt/` — Claude Code plugin:
   - `.claude-plugin/plugin.json` — Plugin metadata (name, version, author)
-  - `.mcp.json` — MCP server config pointing to `https://mcp.credyt.ai` with bearer token auth
+  - `.mcp.json` — MCP server config (auto-connects on plugin install)
   - `commands/init.md` — `/credyt:init` command: account setup and API key verification
-  - `skills/setup/SKILL.md` — `/credyt:setup` skill: guided billing model discovery and product configuration
-  - `skills/verify/SKILL.md` — `/credyt:verify` skill: end-to-end billing cycle test
-  - `skills/integrate/SKILL.md` — `/credyt:integrate` skill: wire Credyt into application code
+  - `skills/` — Symlinks to `../../skills/` (shared skill files)
+- `.claude-plugin/marketplace.json` — Claude Code marketplace distribution config
 
 ## How It Works
 
@@ -33,7 +35,9 @@ Requires `CREDYT_API_KEY` environment variable set to `Bearer sk_...` format. Co
 
 From marketplace: `/plugin marketplace add credyt/ai-skills` then `/plugin install credyt@credyt/ai-skills`
 
-Local development: `claude --plugin-dir ./ai-skills/credyt-plugin`
+Local development: `claude --plugin-dir ./claude-plugins/credyt`
+
+Via skills.sh (any agent): `npx skills add credyt/ai-skills`
 
 ---
 
@@ -51,7 +55,9 @@ When in doubt, ask: _would a staff engineer look at this and approve it immediat
 
 Skills are entirely defined in their `SKILL.md` files. These contain the full prompt, workflow steps, user-facing copy, error handling, and MCP tool call patterns. Changes to billing workflows happen here — there is no code to compile or deploy.
 
-Read the full `SKILL.md` file before making any edits. Preserve the conversational tone — skills guide users through a workflow, they don't run scripts. Test locally using `claude --plugin-dir ./ai-skills/credyt-plugin` before committing.
+Always edit the skill files in `skills/` at the repo root. The files in `claude-plugins/credyt/skills/` are symlinks — do not create separate copies there.
+
+Read the full `SKILL.md` file before making any edits. Preserve the conversational tone — skills guide users through a workflow, they don't run scripts. Test locally using `claude --plugin-dir ./claude-plugins/credyt` before committing.
 
 ---
 
