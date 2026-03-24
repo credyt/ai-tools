@@ -45,6 +45,10 @@ done
 
 # Prompt for the API key when not supplied
 if [[ -z "$KEY" ]]; then
+  if ! [[ -c /dev/tty ]]; then
+    echo "Error: --key is required when /dev/tty is not available" >&2
+    exit 2
+  fi
   echo >&2
   echo "To connect to Credyt, you need your API key." >&2
   echo "Find it in the Developers section of the Credyt dashboard." >&2
@@ -61,6 +65,10 @@ fi
 
 # Prompt interactively when --target is not supplied
 if [[ -z "$TARGET" ]]; then
+  if ! [[ -c /dev/tty ]]; then
+    echo "Error: --target is required when /dev/tty is not available" >&2
+    exit 2
+  fi
   echo "Where would you like to save the API key?" >&2
   echo "  1) Global — ~/.claude/settings.json (all projects)" >&2
   echo "  2) Project — .claude/settings.local.json (this project only, gitignored)" >&2
@@ -109,6 +117,10 @@ fi
 # Case 2: Key already set — prompt to overwrite unless --force
 EXISTING=$(jq -r '.env.CREDYT_API_KEY // empty' "$TARGET")
 if [[ -n "$EXISTING" ]] && [[ "$FORCE" != true ]]; then
+  if ! [[ -c /dev/tty ]]; then
+    printf '{"status":"exists","target":"%s","message":"CREDYT_API_KEY already set — rerun with --force to overwrite"}\n' "$TARGET"
+    exit 0
+  fi
   read -r -p "CREDYT_API_KEY is already set in $TARGET. Overwrite? (y/N): " confirm </dev/tty
   if [[ ! "$confirm" =~ ^[Yy]$ ]]; then
     printf '{"status":"exists","target":"%s","message":"Skipped — existing key retained"}\n' "$TARGET"

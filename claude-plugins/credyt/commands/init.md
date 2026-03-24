@@ -22,19 +22,34 @@ If it **is not** set, continue to Step 2.
 
 ## Step 2: Configure the API key
 
-### 2a: Run the configuration script
+### 2a: Collect the API key
+
+Ask the user for their Credyt API key. It's in the **Developers** section of the Credyt dashboard. If they don't have an account, direct them to sign up at https://app.credyt.ai/api/sign-up.
+
+**Never** echo or print the API key value to the terminal.
+
+### 2b: Ask where to save
+
+Ask the user where they'd like to save the key:
+
+- **Global** (`~/.claude/settings.json`) — applies to all your projects
+- **Project** (`.claude/settings.local.json`) — this project only (gitignored)
+
+### 2c: Run the configuration script
+
+Once you have both values, run:
 
 ```bash
-./scripts/configure-api-key.sh
+./scripts/configure-api-key.sh --key "<key>" --target <global|project>
 ```
 
-The script handles everything: prompting for the API key, choosing where to save it, and writing the settings file safely.
+If the script reports an existing key (`"status": "exists"`), ask the user whether they want to overwrite it. If yes, rerun with `--force`.
 
-**If the script exits with code 0** — the key was written or retained. Proceed to step 2b.
+**If the script exits with code 0** — the key was written or retained. Proceed to step 2d.
 
 **If the script exits with code 2** — something went wrong (jq not installed, invalid JSON, etc.). Share the script's output with the user and help them resolve it before retrying.
 
-### 2b: Tell the user to restart
+### 2d: Tell the user to restart
 
 > "Your API key has been saved to `<target from script output>`. **Please restart Claude Code** for the environment variable to take effect, then run `/credyt:init` again to complete setup."
 
