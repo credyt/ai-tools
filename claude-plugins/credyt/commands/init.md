@@ -32,8 +32,10 @@ Ask the user for their Credyt API key. It's in the **Developers** section of the
 
 Ask the user where they'd like to save the key:
 
-- **Global** (`~/.claude/settings.json`) — applies to all your projects
-- **Project** (`.claude/settings.local.json`) — this project only (gitignored)
+1. **Global** (`~/.claude/settings.json`) — applies to all your projects
+2. **Project** (`.claude/settings.local.json`) — this project only (gitignored)
+
+Accept `1` or `2`. Map `1` → `global`, `2` → `project`.
 
 ### 2c: Run the configuration script
 

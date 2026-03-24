@@ -1,17 +1,14 @@
 #!/usr/bin/env bash
 # Configure CREDYT_API_KEY in a Claude Code settings file.
 #
-# Usage: configure-api-key.sh [--key <api-key>] [--target <global|project|path>] [--force]
-#
-# If --key is omitted the script prompts the user for their API key.
-# If --target is omitted the script prompts the user to choose a destination.
+# Usage: configure-api-key.sh --key <api-key> --target <global|project|path> [--force]
 #
 # Exit codes:
 #   0  Key was set or retained
 #   2  Error (jq not found, invalid JSON, write failure)
 #
 # Stdout: JSON result — { "status": "set"|"exists"|"error", "target": "...", "message": "..." }
-# Stderr: diagnostic messages and interactive prompts
+# Stderr: diagnostic messages
 
 set -euo pipefail
 
@@ -21,13 +18,11 @@ FORCE=false
 
 usage() {
   cat >&2 <<'EOF'
-Usage: configure-api-key.sh [--key <api-key>] [--target <global|project|path>] [--force]
+Usage: configure-api-key.sh --key <api-key> --target <global|project|path> [--force]
 
   --key     Credyt API key. Accepts "key_..." or pre-prefixed "Bearer key_..."
-            If omitted, the script prompts interactively.
   --target  Where to save: "global" (~/.claude/settings.json),
             "project" (.claude/settings.local.json), or an explicit file path.
-            If omitted, the script prompts interactively.
   --force   Overwrite an existing CREDYT_API_KEY without confirmation
   --help    Show this message
 EOF
@@ -43,41 +38,14 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
-# Prompt for the API key when not supplied
 if [[ -z "$KEY" ]]; then
-  if ! [[ -c /dev/tty ]]; then
-    echo "Error: --key is required when /dev/tty is not available" >&2
-    exit 2
-  fi
-  echo >&2
-  echo "To connect to Credyt, you need your API key." >&2
-  echo "Find it in the Developers section of the Credyt dashboard." >&2
-  echo "No account yet? Sign up at https://app.credyt.ai/api/sign-up" >&2
-  echo >&2
-  read -r -s -p "Paste your API key: " KEY </dev/tty
-  echo >&2
-fi
-
-if [[ -z "$KEY" ]]; then
-  echo "Error: no API key provided" >&2
+  echo "Error: --key is required" >&2
   exit 2
 fi
 
-# Prompt interactively when --target is not supplied
 if [[ -z "$TARGET" ]]; then
-  if ! [[ -c /dev/tty ]]; then
-    echo "Error: --target is required when /dev/tty is not available" >&2
-    exit 2
-  fi
-  echo "Where would you like to save the API key?" >&2
-  echo "  1) Global — ~/.claude/settings.json (all projects)" >&2
-  echo "  2) Project — .claude/settings.local.json (this project only, gitignored)" >&2
-  read -r -p "Enter 1 or 2: " choice </dev/tty
-  case "$choice" in
-    1) TARGET="global" ;;
-    2) TARGET="project" ;;
-    *) echo "Invalid choice: $choice" >&2; exit 2 ;;
-  esac
+  echo "Error: --target is required" >&2
+  exit 2
 fi
 
 # Resolve named targets to their canonical paths
@@ -114,18 +82,11 @@ if ! jq empty "$TARGET" 2>/dev/null; then
   exit 2
 fi
 
-# Case 2: Key already set — prompt to overwrite unless --force
+# Case 2: Key already set — return exists status unless --force
 EXISTING=$(jq -r '.env.CREDYT_API_KEY // empty' "$TARGET")
 if [[ -n "$EXISTING" ]] && [[ "$FORCE" != true ]]; then
-  if ! [[ -c /dev/tty ]]; then
-    printf '{"status":"exists","target":"%s","message":"CREDYT_API_KEY already set — rerun with --force to overwrite"}\n' "$TARGET"
-    exit 0
-  fi
-  read -r -p "CREDYT_API_KEY is already set in $TARGET. Overwrite? (y/N): " confirm </dev/tty
-  if [[ ! "$confirm" =~ ^[Yy]$ ]]; then
-    printf '{"status":"exists","target":"%s","message":"Skipped — existing key retained"}\n' "$TARGET"
-    exit 0
-  fi
+  printf '{"status":"exists","target":"%s","message":"CREDYT_API_KEY already set — rerun with --force to overwrite"}\n' "$TARGET"
+  exit 0
 fi
 
 # Case 3 / 4: Merge key into the file via a temp file (safe write)
