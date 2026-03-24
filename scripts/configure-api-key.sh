@@ -1,17 +1,17 @@
 #!/usr/bin/env bash
 # Configure CREDYT_API_KEY in a Claude Code settings file.
 #
-# Usage: configure-api-key.sh --key <api-key> [--target <global|project|path>] [--force]
+# Usage: configure-api-key.sh [--key <api-key>] [--target <global|project|path>] [--force]
 #
-# If --target is omitted the script prompts the user interactively.
+# If --key is omitted the script prompts the user for their API key.
+# If --target is omitted the script prompts the user to choose a destination.
 #
 # Exit codes:
-#   0  Key was set successfully
-#   1  Key already exists; re-run with --force to overwrite
-#   2  Error (missing args, jq not found, invalid JSON, write failure)
+#   0  Key was set or retained
+#   2  Error (jq not found, invalid JSON, write failure)
 #
 # Stdout: JSON result — { "status": "set"|"exists"|"error", "target": "...", "message": "..." }
-# Stderr: diagnostic messages only
+# Stderr: diagnostic messages and interactive prompts
 
 set -euo pipefail
 
@@ -21,12 +21,13 @@ FORCE=false
 
 usage() {
   cat >&2 <<'EOF'
-Usage: configure-api-key.sh --key <api-key> [--target <global|project|path>] [--force]
+Usage: configure-api-key.sh [--key <api-key>] [--target <global|project|path>] [--force]
 
   --key     Credyt API key. Accepts "key_..." or pre-prefixed "Bearer key_..."
+            If omitted, the script prompts interactively.
   --target  Where to save: "global" (~/.claude/settings.json),
             "project" (.claude/settings.local.json), or an explicit file path.
-            If omitted, the script will prompt interactively.
+            If omitted, the script prompts interactively.
   --force   Overwrite an existing CREDYT_API_KEY without confirmation
   --help    Show this message
 EOF
@@ -42,9 +43,19 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
+# Prompt for the API key when not supplied
 if [[ -z "$KEY" ]]; then
-  echo "Error: --key is required" >&2
-  usage
+  echo >&2
+  echo "To connect to Credyt, you need your API key." >&2
+  echo "Find it in the Developers section of the Credyt dashboard." >&2
+  echo "No account yet? Sign up at https://app.credyt.ai/api/sign-up" >&2
+  echo >&2
+  read -r -s -p "Paste your API key: " KEY </dev/tty
+  echo >&2
+fi
+
+if [[ -z "$KEY" ]]; then
+  echo "Error: no API key provided" >&2
   exit 2
 fi
 
@@ -95,11 +106,14 @@ if ! jq empty "$TARGET" 2>/dev/null; then
   exit 2
 fi
 
-# Case 2: Key already set — exit 1 unless --force
+# Case 2: Key already set — prompt to overwrite unless --force
 EXISTING=$(jq -r '.env.CREDYT_API_KEY // empty' "$TARGET")
 if [[ -n "$EXISTING" ]] && [[ "$FORCE" != true ]]; then
-  printf '{"status":"exists","target":"%s","message":"CREDYT_API_KEY is already set. Re-run with --force to overwrite."}\n' "$TARGET"
-  exit 1
+  read -r -p "CREDYT_API_KEY is already set in $TARGET. Overwrite? (y/N): " confirm </dev/tty
+  if [[ ! "$confirm" =~ ^[Yy]$ ]]; then
+    printf '{"status":"exists","target":"%s","message":"Skipped — existing key retained"}\n' "$TARGET"
+    exit 0
+  fi
 fi
 
 # Case 3 / 4: Merge key into the file via a temp file (safe write)

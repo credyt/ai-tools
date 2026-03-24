@@ -22,49 +22,19 @@ If it **is not** set, continue to Step 2.
 
 ## Step 2: Configure the API key
 
-### 2a: Get the API key from the user
-
-Ask the user for their Credyt API key:
-
-> "To connect to Credyt, I need your API key. You can find it in the **Developers** section of the Credyt dashboard.
->
-> Don't have an account yet? Sign up at [app.credyt.ai/api/sign-up](https://app.credyt.ai/api/sign-up) — it only takes a minute.
->
-> Please paste your API key below:"
-
-Wait for the user to provide the key.
-
-Once received, normalise the key:
-- If it starts with `key_`, prepend `Bearer ` to get `Bearer key_...`
-- If it already starts with `Bearer `, use it as-is
-
-### 2b: Write the key to the settings file
-
-Run the configuration script — it will prompt the user to choose between global and project settings:
+### 2a: Run the configuration script
 
 ```bash
-./scripts/configure-api-key.sh --key "<normalised key>"
+./scripts/configure-api-key.sh
 ```
 
-The script handles all cases safely: creating the file, merging into an existing `env` block, and avoiding overwriting an existing key.
+The script handles everything: prompting for the API key, choosing where to save it, and writing the settings file safely.
 
-**If the script exits with code 0** — the key was written. Proceed to step 2c.
+**If the script exits with code 0** — the key was written or retained. Proceed to step 2b.
 
-**If the script exits with code 1** — the key is already set. Confirm with the user:
+**If the script exits with code 2** — something went wrong (jq not installed, invalid JSON, etc.). Share the script's output with the user and help them resolve it before retrying.
 
-> "A `CREDYT_API_KEY` is already set in that file. Would you like to overwrite it? (yes/no)"
-
-If yes, re-run with `--force` (pass the `target` value from the first run's JSON output to skip re-prompting):
-
-```bash
-./scripts/configure-api-key.sh --key "<normalised key>" --target "<target from script output>" --force
-```
-
-If no, proceed to step 2c using the existing key.
-
-**If the script exits with code 2** — something went wrong (jq not installed, invalid JSON in the existing file, etc.). The script's stdout will explain the error. Share it with the user and help them resolve it before retrying.
-
-### 2c: Tell the user to restart
+### 2b: Tell the user to restart
 
 > "Your API key has been saved to `<target from script output>`. **Please restart Claude Code** for the environment variable to take effect, then run `/credyt:init` again to complete setup."
 
