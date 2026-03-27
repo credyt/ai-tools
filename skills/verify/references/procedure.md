@@ -7,12 +7,35 @@ The six-step procedure for verifying a Credyt product end-to-end. Run once per p
 Use `credyt:create_customer` with:
 - Name: "Verification Test Customer"
 - External ID: something unique like "verify_test_{timestamp}"
-- Subscribe to the product being tested
+- Subscribe to **all products being verified** in this session (not just one)
+- Specify the product version explicitly (e.g., `version: 1`) rather than relying on the default
+- Include `return_url: "https://example.com/return"` — this is required when subscribing to any product with a fixed recurring fee
 
-**Pass**: Customer created with an active subscription.
+**Pass**: Customer created.
 **Fail**: Check that the product is published and the product code is correct.
 
 Record the customer ID for subsequent steps.
+
+## Step 1a: Check for payment-required subscriptions
+
+After creating the customer, check the subscription status. If the product has a fixed recurring fee, the subscription may be `action_required` rather than immediately active.
+
+Use `credyt:get_customer` and inspect the subscription status. If status is `action_required`:
+
+1. Extract `required_actions[0].redirect_url` from the response
+2. Tell the user:
+
+   > "This subscription requires payment before it activates. Open this URL and complete checkout using Stripe test card `4242 4242 4242 4242`, any future expiry, and any CVC:
+   > [payment URL]
+   > Let me know once you've completed the payment."
+
+3. Wait for the user to confirm payment before continuing.
+4. If the URL has expired, call `credyt:get_customer` again to retrieve a fresh one.
+
+**Pass**: Subscription status is `active` after payment (or was `active` immediately for usage-only products).
+**Fail**: Payment not completed, URL expired (refresh with `get_customer`), or wrong product type.
+
+Usage events submitted before the subscription is active will not generate fees — do not proceed to later steps until the subscription is active.
 
 ## Step 2: Check starting balance
 
@@ -53,12 +76,17 @@ Record the event ID.
 
 ## Step 5: Verify fees were generated
 
-Use `credyt:get_event` with the event ID. Check that:
-- Fees were generated (not empty)
-- The fee amount matches the expected price
+Call `credyt:get_event` using the exact UUID submitted in Step 4. Do not rely on balance changes alone — always call this explicitly.
 
-**Pass**: Fees present and amount matches expected price.
-**Fail**: No fees — check product pricing config, subscription status, and event_type match.
+Check:
+- `fees` array is not empty
+- `fees[0].amount` matches the expected price for the product
+- `fees[0].product_version` matches the version the customer is subscribed to
+
+> "Event [UUID]: fees[0].amount = [X] (expected [Y]), product_version = [Z] ✓"
+
+**Pass**: Fees present, amount matches, and product version is correct.
+**Fail**: No fees — check product pricing config, subscription status, and event_type match. If fees are present but product_version is unexpected, the customer may be on a different version than intended.
 
 Record the fee amount.
 
@@ -80,10 +108,11 @@ Present a clear summary table:
 > | Step | Result | Details |
 > |------|--------|---------|
 > | Create test customer | ✓ PASS | Customer ID: cust_xxx |
+> | Subscription active | ✓ PASS | Status: active (payment completed) |
 > | Check starting balance | ✓ PASS | Balance: $0.00 |
 > | Fund wallet | ✓ PASS | Added $10.00, balance: $10.00 |
 > | Send test event | ✓ PASS | Event ID: evt_xxx |
-> | Verify fees | ✓ PASS | Fee: $2.50 (expected: $2.50) |
+> | Verify fees | ✓ PASS | Fee: $2.50 (expected: $2.50), version: 1 |
 > | Verify balance | ✓ PASS | Balance: $7.50 (expected: $7.50) |
 >
 > **Result: ALL PASSED** ✓

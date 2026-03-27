@@ -15,6 +15,8 @@ If they already have products configured, acknowledge what's there:
 
 > "I can see you already have [X] set up. Are you looking to add something new, change existing pricing, or start fresh?"
 
+If they want to start fresh, **do not archive or delete existing products**. Leave them as-is. The user can manage existing products conversationally at any time (e.g. "archive the Pro product", "delete this product") — never do this automatically.
+
 If this is their first time, proceed with full discovery.
 
 ## Discovery: Understand their business
@@ -80,15 +82,36 @@ If anything is unclear, ask. Don't proceed until discovery is complete.
 
 ## Configure via MCP
 
-Walk the user through each step. Explain what you're creating in plain terms and confirm before executing.
+Walk the user through each step. Before executing any MCP call that creates or modifies data, show the user a table of the intended parameters and get explicit confirmation:
+
+> "I'm going to create [X] with these settings — does everything look right?"
+>
+> | Field | Value |
+> |-------|-------|
+> | ... | ... |
+>
+> "Let me know if you'd like to change anything before I proceed."
+
+This applies to every mutation: creating assets, products, vendors, versions, and adjustments. Never assume values the user hasn't confirmed — especially precision, pricing, and event types.
 
 ### Create a custom currency (if using credits/tokens/coins)
 
 Only if they chose a custom currency. This must be created before any products that use it.
 
-Use `credyt:create_asset`. Before creating, explain the conversion clearly:
+Use `credyt:create_asset`. Before creating, confirm the full configuration with the user. Verify precision explicitly — credits are typically whole numbers (precision 0) but this must be confirmed:
 
-> "So if 1 credit = $0.05, that means $1 gets you 20 credits. A user topping up $10 would get 200 credits. Does that feel right?"
+> "I'm going to create a custom asset with these settings — does everything look right?"
+>
+> | Field | Value |
+> |-------|-------|
+> | Name | Credits |
+> | Code | `credits` |
+> | Precision | 0 (whole credits, no fractions) |
+> | Exchange rate | 1 credit = $0.05 → $1 buys 20 credits |
+>
+> "Would you like to change anything before I proceed?"
+
+Explain the conversion in concrete terms so the user can verify it makes sense:
 
 **After creating**, use `credyt:quote_asset` to verify the conversion. Quote how many units $1, $10, and $50 would buy:
 
@@ -98,25 +121,49 @@ If the conversion is wrong, use `credyt:add_asset_rate` to correct it and re-quo
 
 ### Create products with pricing
 
-Use `credyt:create_product` for each billable activity. Walk them through what you're setting up:
+Use `credyt:create_product` for each billable activity. Before creating, confirm all parameters with the user:
 
-> "I'm going to create a product called 'Image Generation' that tracks every time a user generates an image and charges 10 credits. Here's what that means..."
+> "I'm going to create a product with these settings — does everything look right?"
+>
+> | Field | Value |
+> |-------|-------|
+> | Name | Image Generation |
+> | Code | `image_gen` |
+> | Event type | `image_generated` |
+> | Usage type | unit |
+> | Price | 10 credits per event |
+>
+> "Would you like to change anything before I proceed?"
 
-For "tracking first": create with zero or placeholder pricing:
-
-> "This will track every image generation. The price is set to 0 for now — we're just recording activity. Once you see the cost data, we can set real prices."
-
-Explain key fields in plain terms:
+Key fields to confirm with the user:
 - **Product name and code**: What this billing item is called and its identifier
-- **Event type**: The activity name that triggers billing (e.g., "image_generated")
+- **Event type**: The activity name that triggers billing (e.g., "image_generated") — must match exactly what the app will send
 - **Usage type**: Per occurrence ("unit") or based on a quantity like tokens ("volume")
 - **Pricing**: How much each event costs
 
-**After creating every product**, use `credyt:simulate_usage` to validate. Construct a sample event matching what would happen in their app:
+For "tracking first", set price to zero and make that explicit in the table.
+
+**A product can have both a fixed recurring price and a usage-based real-time price.** For example, a $20/month subscription that also charges 1 credit per AI job is a single product with two prices — a recurring USD price and a per-event credit price. Don't split this into two products.
+
+**To update pricing on an existing product, always create a new version** using `credyt:create_product_version` — never create a new product. This preserves billing history and keeps customers on their existing subscription. Show the same confirmation table before creating a version.
+
+**After creating every product**, use `credyt:simulate_usage` to validate. Always specify the product version explicitly in the simulation (e.g., `version: 1`) rather than relying on the default — this ensures you're testing what you just configured:
 
 > "Let me test this — one image generation should cost 10 credits... ✓ Confirmed: 10 credits deducted, that's $0.50. Does that match what you expected?"
 
-If the simulation doesn't match, create a new product version with `credyt:create_product_version` using the corrected pricing and re-simulate until it's right.
+If the simulation doesn't match, create a new product version with `credyt:create_product_version` using the corrected pricing and re-simulate until it's right. Confirm the new version parameters in a table before creating it.
+
+### Included credits (entitlements)
+
+If the billing model includes credits bundled into a subscription (e.g., "$20/month includes 1,000 credits"), those are configured as **entitlements** at the product level — not as a negative price or a separate product.
+
+**Important limitation**: `create_product` and `create_product_version` do not expose an `entitlements` field via MCP. Entitlements must be configured in the Credyt dashboard after the product is created via MCP.
+
+Tell the user:
+
+> "The bundled credits are set up as an entitlement on the product — this controls how many credits are granted each billing cycle and whether they roll over or expire. This needs to be configured in the Credyt dashboard (not via MCP). Go to your product → Entitlements and add a bundled entitlement with [N] credits refreshed monthly."
+
+Do not attempt to model included credits as a negative fixed price — this fails validation and isn't the correct approach.
 
 ### Set up cost tracking (prompt for this)
 
