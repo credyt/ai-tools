@@ -37,23 +37,57 @@ Ask the user where they'd like to save the key:
 
 Accept `1` or `2`. Map `1` → `global`, `2` → `project`.
 
-### 2c: Run the configuration script
+### 2c: Save the key to the settings file
 
-Once you have both values, run:
+Resolve the target path based on the user's choice:
+- **Global** → `~/.claude/settings.json`
+- **Project** → `.claude/settings.local.json`
+
+Normalize the key — if it does not start with `Bearer `, prepend `Bearer `.
+
+**Never** echo or print the API key value to the terminal.
+
+#### If the file does not exist
+
+Create the parent directory, then write a new settings file. Substitute the real normalized key value — do not write the literal placeholder:
 
 ```bash
-./scripts/configure-api-key.sh --key "<key>" --target <global|project>
+mkdir -p <parent-directory>
 ```
 
-If the script reports an existing key (`"status": "exists"`), ask the user whether they want to overwrite it. If yes, rerun with `--force`.
+Then write a new file at `<target-path>` using the Write tool with this content:
 
-**If the script exits with code 0** — the key was written or retained. Proceed to step 2d.
+```json
+{
+  "env": {
+    "CREDYT_API_KEY": "<normalized-key>"
+  }
+}
+```
 
-**If the script exits with code 2** — something went wrong (jq not installed, invalid JSON, etc.). Share the script's output with the user and help them resolve it before retrying.
+#### If the file exists
+
+Check whether `CREDYT_API_KEY` is already present:
+
+```bash
+grep -q "CREDYT_API_KEY" <target-path> && echo "exists" || echo "not set"
+```
+
+If **already set**, ask the user whether they want to overwrite it. If they decline, keep the existing value and skip to Step 2d.
+
+If **not set** (or user confirms overwrite), merge the key into the existing file using `jq`, preserving all other settings:
+
+```bash
+jq --arg key "<normalized-key>" '.env.CREDYT_API_KEY = $key' <target-path> > tmp.$$.json && mv tmp.$$.json <target-path>
+```
+
+If `jq` is not installed, tell the user and suggest installing it (`brew install jq` on macOS, `apt install jq` on Linux) before retrying.
+
+Confirm to the user: "Your API key has been saved to `<resolved-path>`."
 
 ### 2d: Tell the user to restart
 
-> "Your API key has been saved to `<target from script output>`. **Please restart Claude Code** for the environment variable to take effect, then run `/credyt:init` again to complete setup."
+> "Your API key has been saved to `<resolved-path>`. **Please restart Claude Code** for the environment variable to take effect, then run `/credyt:init` again to complete setup."
 
 **Stop here.** The env var won't be available until restart, so do not proceed to MCP verification.
 
