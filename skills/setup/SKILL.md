@@ -98,18 +98,14 @@ This applies to every mutation: creating assets, products, vendors, versions, an
 
 Only if they chose a custom currency. This must be created before any products that use it.
 
-Use `credyt:create_asset`. Before creating, confirm the full configuration with the user. Verify precision explicitly — credits are typically whole numbers (precision 0) but this must be confirmed:
+Use `credyt:create_asset`. Verify precision explicitly — credits are typically whole numbers (precision 0) but this must be confirmed. For example:
 
-> "I'm going to create a custom asset with these settings — does everything look right?"
->
 > | Field | Value |
 > |-------|-------|
 > | Name | Credits |
 > | Code | `credits` |
 > | Precision | 0 (whole credits, no fractions) |
 > | Exchange rate | 1 credit = $0.05 → $1 buys 20 credits |
->
-> "Would you like to change anything before I proceed?"
 
 Explain the conversion in concrete terms so the user can verify it makes sense:
 
@@ -121,10 +117,8 @@ If the conversion is wrong, use `credyt:add_asset_rate` to correct it and re-quo
 
 ### Create products with pricing
 
-Use `credyt:create_product` for each billable activity. Before creating, confirm all parameters with the user:
+Use `credyt:create_product` for each billable activity. For example:
 
-> "I'm going to create a product with these settings — does everything look right?"
->
 > | Field | Value |
 > |-------|-------|
 > | Name | Image Generation |
@@ -132,8 +126,6 @@ Use `credyt:create_product` for each billable activity. Before creating, confirm
 > | Event type | `image_generated` |
 > | Usage type | unit |
 > | Price | 10 credits per event |
->
-> "Would you like to change anything before I proceed?"
 
 Key fields to confirm with the user:
 - **Product name and code**: What this billing item is called and its identifier
@@ -143,25 +135,44 @@ Key fields to confirm with the user:
 
 For "tracking first", set price to zero and make that explicit in the table.
 
-**A product can have both a fixed recurring price and a usage-based real-time price.** For example, a $20/month subscription that also charges 1 credit per AI job is a single product with two prices — a recurring USD price and a per-event credit price. Don't split this into two products.
+**A product can have both a fixed recurring price and a usage-based real-time price.** For example, a $20/month subscription that also charges 1 credit per AI job is a single product with two prices — a recurring USD price and a per-event credit price. By default, use a single product with multiple prices; only create separate products if the user specifically wants them.
 
 **To update pricing on an existing product, always create a new version** using `credyt:create_product_version` — never create a new product. This preserves billing history and keeps customers on their existing subscription. Show the same confirmation table before creating a version.
 
-**After creating every product**, use `credyt:simulate_usage` to validate. Always specify the product version explicitly in the simulation (e.g., `version: 1`) rather than relying on the default — this ensures you're testing what you just configured:
+**After creating or updating every product**, use `credyt:simulate_usage` to validate. Always specify the product version explicitly in the simulation (e.g., `version: 1`) rather than relying on the default — this ensures you're testing what you just configured:
 
 > "Let me test this — one image generation should cost 10 credits... ✓ Confirmed: 10 credits deducted, that's $0.50. Does that match what you expected?"
 
 If the simulation doesn't match, create a new product version with `credyt:create_product_version` using the corrected pricing and re-simulate until it's right. Confirm the new version parameters in a table before creating it.
 
+**Note on version changes**: After creating a new product version, any existing test customers will still be subscribed to the old version. Either create a new test customer subscribed to the new version, or update the existing customer's subscription before running verification.
+
 ### Included credits (entitlements)
 
 If the billing model includes credits bundled into a subscription (e.g., "$20/month includes 1,000 credits"), those are configured as **entitlements** at the product level — not as a negative price or a separate product.
 
-**Important limitation**: `create_product` and `create_product_version` do not expose an `entitlements` field via MCP. Entitlements must be configured in the Credyt dashboard after the product is created via MCP.
+Include an `entitlements` array in the `create_product` (or `create_product_version`) call. For example, a product that grants 1,000 credits per day:
 
-Tell the user:
+```json
+"entitlements": [
+  {
+    "name": "Daily Credit Allowance",
+    "asset": "{assetCode}",
+    "amount": 1000,
+    "purpose": "bundled",
+    "refresh": {
+      "interval": "day",
+      "strategy": "expire_and_replace"
+    },
+    "accounting": {
+      "revenue_basis": 0.00,
+      "cost_basis": "auto"
+    }
+  }
+]
+```
 
-> "The bundled credits are set up as an entitlement on the product — this controls how many credits are granted each billing cycle and whether they roll over or expire. This needs to be configured in the Credyt dashboard (not via MCP). Go to your product → Entitlements and add a bundled entitlement with [N] credits refreshed monthly."
+Confirm the entitlement fields (name, asset, amount, refresh interval) with the user before creating, using the standard parameter table.
 
 Do not attempt to model included credits as a negative fixed price — this fails validation and isn't the correct approach.
 

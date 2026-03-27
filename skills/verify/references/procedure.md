@@ -18,11 +18,11 @@ Record the customer ID for subsequent steps.
 
 ## Step 1a: Check for payment-required subscriptions
 
-After creating the customer, check the subscription status. If the product has a fixed recurring fee, the subscription may be `action_required` rather than immediately active.
+After creating the customer, inspect the subscription status in the `create_customer` response — no additional call is needed. If the product has a fixed recurring fee, the subscription may be `action_required` rather than immediately active.
 
-Use `credyt:get_customer` and inspect the subscription status. If status is `action_required`:
+If status is `action_required`:
 
-1. Extract `required_actions[0].redirect_url` from the response
+1. Extract `required_actions[0].redirect_url` from the `create_customer` response
 2. Tell the user:
 
    > "This subscription requires payment before it activates. Open this URL and complete checkout using Stripe test card `4242 4242 4242 4242`, any future expiry, and any CVC:
@@ -30,7 +30,7 @@ Use `credyt:get_customer` and inspect the subscription status. If status is `act
    > Let me know once you've completed the payment."
 
 3. Wait for the user to confirm payment before continuing.
-4. If the URL has expired, call `credyt:get_customer` again to retrieve a fresh one.
+4. If the URL has expired, call `credyt:get_customer` to retrieve a fresh one.
 
 **Pass**: Subscription status is `active` after payment (or was `active` immediately for usage-only products).
 **Fail**: Payment not completed, URL expired (refresh with `get_customer`), or wrong product type.
