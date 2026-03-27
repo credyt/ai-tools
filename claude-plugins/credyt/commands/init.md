@@ -68,7 +68,7 @@ Then write a new file at `<target-path>` using the Write tool with this content:
 Check whether `CREDYT_API_KEY` is already present:
 
 ```bash
-grep -q "CREDYT_API_KEY" <target-path> && echo "exists" || echo "not set"
+grep -q '"CREDYT_API_KEY"' <target-path> && echo "exists" || echo "not set"
 ```
 
 If **already set**, ask the user whether they want to overwrite it. If they decline, keep the existing value and skip to Step 2d.
