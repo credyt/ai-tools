@@ -20,11 +20,12 @@ The skills use the Credyt MCP server. Connect it in your tool at `https://mcp.cr
 
 ### Available skills
 
-| Skill       | What it does                                                                                                        |
-| ----------- | ------------------------------------------------------------------------------------------------------------------- |
-| `setup`     | Discovers your pricing model, configures products, assets, and pricing via MCP, and verifies the full billing cycle |
-| `verify`    | Tests the billing cycle end-to-end for a specific product                                                           |
-| `integrate` | Wires Credyt billing into your application code                                                                     |
+| Skill              | What it does                                                                                                        |
+| ------------------ | ------------------------------------------------------------------------------------------------------------------- |
+| `pricing-strategy` | Guides you through defining your pricing strategy before configuring billing tooling                                |
+| `setup`            | Discovers your pricing model, configures products, assets, and pricing via MCP, and verifies the full billing cycle |
+| `verify`           | Tests the billing cycle end-to-end for a specific product                                                           |
+| `integrate`        | Wires Credyt billing into your application code                                                                     |
 
 ---
 
