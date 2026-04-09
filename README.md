@@ -4,19 +4,27 @@ Set up and integrate [Credyt](https://credyt.ai) — real-time monetization infr
 
 ## Quick install (any AI agent)
 
-Install skills for Claude Code, Cursor, Codex, Gemini, Copilot, and other agents:
+Install for Claude Code, Cursor, Codex, Gemini, Copilot, and other agents:
 
+**1. Connect the Credyt MCP server** — get an API key at [app.credyt.ai](https://app.credyt.ai/api/sign-up), then run:
+
+```bash
+npx add-mcp \
+  https://mcp.credyt.ai \
+  --header "Authorization: Bearer key_your_api_key_here"
 ```
+
+**2. Add the skills:**
+
+```bash
 npx skills add credyt/ai-skills
 ```
 
 Or install a specific skill:
 
-```
+```bash
 npx skills add credyt/ai-skills --skill billing-setup
 ```
-
-The skills use the Credyt MCP server. Connect it in your tool at `https://mcp.credyt.ai` with your API key as a Bearer token in the Authorization header. Get an API key at [app.credyt.ai](https://app.credyt.ai/api/sign-up).
 
 ### Available skills
 
@@ -73,7 +81,7 @@ Add the key to a Claude settings file so it's available to the MCP server.
 ```json
 {
   "env": {
-    "CREDYT_API_KEY": "Bearer sk_your_api_key_here"
+    "CREDYT_API_KEY": "Bearer key_your_api_key_here"
   }
 }
 ```
@@ -83,7 +91,7 @@ Add the key to a Claude settings file so it's available to the MCP server.
 ```json
 {
   "env": {
-    "CREDYT_API_KEY": "Bearer sk_your_api_key_here"
+    "CREDYT_API_KEY": "Bearer key_your_api_key_here"
   }
 }
 ```
@@ -93,7 +101,7 @@ Claude Code automatically adds this file to `.gitignore`, so each developer on a
 **Option 3 — Terminal / shell profile:** Export the variable in your current session or add it to your shell profile (`~/.zshrc`, `~/.bashrc`, etc.):
 
 ```bash
-export CREDYT_API_KEY="Bearer sk_your_api_key_here"
+export CREDYT_API_KEY="Bearer key_your_api_key_here"
 ```
 
 To persist across sessions, add the line to your shell profile and run `source ~/.zshrc` (or restart your terminal).
@@ -156,6 +164,20 @@ The guided skills (`billing-setup`, `billing-verification`, `billing-integration
 
 ### Connect the MCP server
 
+The fastest way is to use [`add-mcp`](https://github.com/neondatabase/add-mcp), which writes the config for you:
+
+```bash
+npx add-mcp "npx mcp-remote https://mcp.credyt.ai --header Authorization:\${CREDYT_API_KEY}" \
+  --name credyt \
+  --env "CREDYT_API_KEY=Bearer key_your_api_key_here" \
+  -a claude-desktop -y
+```
+
+Replace `key_your_api_key_here` with your key from [app.credyt.ai](https://app.credyt.ai/api/sign-up), then restart Claude Desktop.
+
+<details>
+<summary>Manual setup</summary>
+
 Open Settings → Developer → Edit config and add the Credyt entry:
 
 ```json
@@ -170,7 +192,7 @@ Open Settings → Developer → Edit config and add the Credyt entry:
         "Authorization:${CREDYT_API_KEY}"
       ],
       "env": {
-        "CREDYT_API_KEY": "Bearer sk_your_api_key_here"
+        "CREDYT_API_KEY": "Bearer key_your_api_key_here"
       }
     }
   }
@@ -178,6 +200,8 @@ Open Settings → Developer → Edit config and add the Credyt entry:
 ```
 
 Restart Claude Desktop after saving.
+
+</details>
 
 ---
 
