@@ -151,18 +151,23 @@ If the simulation doesn't match, create a new product version with `credyt:creat
 
 If the billing model includes credits bundled into a subscription (e.g., "$20/month includes 1,000 credits"), those are configured as **entitlements** at the product level — not as a negative price or a separate product.
 
-Include an `entitlements` array in the `create_product` (or `create_product_version`) call. For example, a product that grants 1,000 credits per day:
+Include an `entitlements` array in the `create_product` (or `create_product_version`) call. Entitlements have two modes:
+
+**Recurring** — credits refresh on a schedule (e.g., 1,000 credits every month):
 
 ```json
 "entitlements": [
   {
-    "name": "Daily Credit Allowance",
+    "name": "Monthly Credit Allowance",
     "asset": "{assetCode}",
     "amount": 1000,
     "purpose": "bundled",
-    "refresh": {
-      "interval": "day",
-      "strategy": "expire_and_replace"
+    "lifecycle": {
+      "duration": "month",
+      "duration_count": 1,
+      "refresh": {
+        "strategy": "expire_and_replace"
+      }
     },
     "accounting": {
       "revenue_basis": 0.00,
@@ -172,7 +177,30 @@ Include an `entitlements` array in the `create_product` (or `create_product_vers
 ]
 ```
 
-Confirm the entitlement fields (name, asset, amount, refresh interval) with the user before creating, using the standard parameter table.
+**One-off** — credits granted once and never refreshed (e.g., a sign-up bonus or promotional grant). Omit `lifecycle.refresh`:
+
+```json
+"entitlements": [
+  {
+    "name": "Welcome Bonus",
+    "asset": "{assetCode}",
+    "amount": 500,
+    "purpose": "promotion",
+    "lifecycle": {
+      "duration": "month",
+      "duration_count": 1
+    },
+    "accounting": {
+      "revenue_basis": 0.00,
+      "cost_basis": "auto"
+    }
+  }
+]
+```
+
+`lifecycle.duration` sets the expiry window; `duration_count` multiplies it (e.g., `duration: "month", duration_count: 3` expires after 3 months). `purpose` is `"bundled"` for subscription-included credits and `"promotion"` for one-off grants.
+
+Confirm the entitlement fields (name, asset, amount, lifecycle duration, and whether it refreshes) with the user before creating, using the standard parameter table.
 
 Do not attempt to model included credits as a negative fixed price — this fails validation and isn't the correct approach.
 
