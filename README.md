@@ -41,16 +41,16 @@ npx skills add credyt/ai-skills --skill billing-setup
 
 This repo provides the same skills in two ways:
 
-- **skills.sh** (`npx skills add credyt/ai-skills`) — works with any AI agent that supports MCP. Connect the Credyt MCP server with `npx add-mcp` first.
-- **Claude Code plugin** (`/plugin install credyt@credyt/ai-skills`) — bundles the MCP server config so it auto-connects on install.
+- **skills.sh** (`npx skills add credyt/ai-skills`) — works with any AI agent that supports MCP.
+- **Claude Code plugin** (`/plugin install credyt@credyt/ai-skills`) — makes skills available as slash commands in Claude Code.
 
-The skills are identical — the plugin just adds MCP auto-configuration for Claude Code users.
+Either way, connect the Credyt MCP server first with `npx add-mcp`.
 
 ---
 
 ## Claude Code plugin
 
-The plugin also connects to the **Credyt MCP server** (`mcp.credyt.ai`), which exposes the Credyt API as tools Claude can call directly — creating products, sending events, checking wallets, and more.
+The plugin makes Credyt skills available as slash commands in Claude Code and lists on the Anthropic marketplace. Connect the MCP server separately with `npx add-mcp` (see above).
 
 | Skill   | `/credyt:billing-setup`        | Discovers your billing model through a guided conversation, then configures products, assets, and pricing in Credyt via MCP. Runs a full end-to-end billing cycle verification automatically.                         |
 | Skill   | `/credyt:billing-verification` | Tests the full billing cycle for a specific product — creates a test customer, funds their wallet, sends a usage event, and confirms the fee was charged correctly. Use this after making changes or to troubleshoot. |
