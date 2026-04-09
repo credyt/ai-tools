@@ -52,9 +52,11 @@ Either way, connect the Credyt MCP server first with `npx add-mcp`.
 
 The plugin makes Credyt skills available as slash commands in Claude Code and lists on the Anthropic marketplace. Connect the MCP server separately with `npx add-mcp` (see above).
 
-| Skill   | `/credyt:billing-setup`        | Discovers your billing model through a guided conversation, then configures products, assets, and pricing in Credyt via MCP. Runs a full end-to-end billing cycle verification automatically.                         |
-| Skill   | `/credyt:billing-verification` | Tests the full billing cycle for a specific product — creates a test customer, funds their wallet, sends a usage event, and confirms the fee was charged correctly. Use this after making changes or to troubleshoot. |
-| Skill   | `/credyt:billing-integration`  | Wires Credyt into your application code. Adds customer creation at signup, usage event tracking, balance checks, cost tracking, billing portal links, and balance display.                                            |
+| Command                        | What it does                                                                                                                                                                                                         |
+| ------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `/credyt:billing-setup`        | Discovers your billing model through a guided conversation, then configures products, assets, and pricing in Credyt via MCP. Runs a full end-to-end billing cycle verification automatically.                         |
+| `/credyt:billing-verification` | Tests the full billing cycle for a specific product — creates a test customer, funds their wallet, sends a usage event, and confirms the fee was charged correctly. Use this after making changes or to troubleshoot. |
+| `/credyt:billing-integration`  | Wires Credyt into your application code. Adds customer creation at signup, usage event tracking, balance checks, cost tracking, billing portal links, and balance display.                                            |
 
 ### Installation
 
