@@ -251,4 +251,4 @@ Run the `billing-integration` skill next. If it is not installed, ask the user t
 
 If the skill is not available and the user has not explicitly asked you to write integration code, stop here and wait for them to install it. Do not hand-roll fetch calls or invent API endpoints.
 
-The SDK packages are `@credyt/api-client` (TypeScript/Node.js) and `credyt-api` (Python). These are the only supported ways to call the Credyt API from application code.
+The preferred way to call the Credyt API from application code is via one of the official SDKs: `@credyt/api-client` (TypeScript/Node.js) or `credyt-api` (Python). If neither SDK suits your stack, the billing-integration skill also covers HTTP direct calls.
