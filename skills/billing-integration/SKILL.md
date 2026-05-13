@@ -72,7 +72,7 @@ client = CredytApiClient(
 
 **Direct HTTP:** Attach `X-CREDYT-API-KEY: <key>` to every request. Create a helper function or configured HTTP client instance that sets this header automatically.
 
-### 2. Customer creation — [docs](https://docs.credyt.ai/quickstart/customers)
+### 2. Customer creation — [docs](https://docs.credyt.ai/quickstart/create-a-customer)
 
 When a new user signs up in their app, create a matching Credyt customer. Find their registration/signup handler and add customer creation after successful account creation.
 
@@ -102,7 +102,16 @@ When the response status is `pending`:
 
 Once the customer pays, Credyt fires a `subscription.activated` webhook. Listen for this event on your backend and use it to activate the user's account.
 
-### 3. Usage event tracking — [docs](https://docs.credyt.ai/quickstart/usage-events)
+**Promotional or bundled signup credits**
+
+If the user's plan includes promotional credits (e.g. "start with $10 free") or bundled credits (e.g. 1,000 free API calls on signup), there are two ways to apply them:
+
+1. **One-off adjustment after customer creation** — credit the customer's wallet directly post-signup. Use this for simple, one-time promotional amounts. See [docs.credyt.ai/advanced-topics/adjustments-charges-gifts](https://docs.credyt.ai/advanced-topics/adjustments-charges-gifts).
+2. **Entitlements** — configure promotional credit as part of the product definition so it applies automatically on every new subscription. Use this for credits that are part of the standard plan offering. See [docs.credyt.ai/features/product-catalog/entitlements](https://docs.credyt.ai/features/product-catalog/entitlements).
+
+Ask the user whether they want to include signup credits, and if so which approach fits their use case.
+
+### 3. Usage event tracking — [docs](https://docs.credyt.ai/quickstart/send-usage)
 
 Find where the billable activities happen in their code and add event submission after each one. Each event needs:
 
@@ -116,7 +125,7 @@ Find where the billable activities happen in their code and add event submission
 For **volume-based** products, the event data must include the volume field (e.g., `total_tokens: 1500`).
 For **dimensional** products, include the dimension values (e.g., `model: "gpt-4"`).
 
-### 4. Cost tracking — [docs](https://docs.credyt.ai/quickstart/cost-tracking)
+### 4. Cost tracking — [docs](https://docs.credyt.ai/features/profitability)
 
 If the user set up vendors in `/credyt:billing-setup`, add cost data to usage events. Each event can include a `costs` array with the vendor ID, the amount it cost, and the currency.
 
@@ -124,7 +133,7 @@ This is typically added right after the billable action completes, when the cost
 
 > "Even if you're not charging users yet, attaching costs to every event lets Credyt calculate your unit economics so you can make pricing decisions based on real data."
 
-### 5. Balance checks — [docs](https://docs.credyt.ai/quickstart/wallets)
+### 5. Balance checks — [docs](https://docs.credyt.ai/quickstart/check-balance)
 
 Before expensive operations, check the customer's wallet balance. If insufficient, block the action and prompt the user to top up.
 
@@ -147,7 +156,7 @@ Key points:
 - Set `return_url` for where to send users after they're done
 - Set `failure_url` for payment failures
 
-### 7. Balance display — [docs](https://docs.credyt.ai/quickstart/wallets)
+### 7. Balance display — [docs](https://docs.credyt.ai/quickstart/check-balance)
 
 Show the user's current balance in the app UI. Fetch from the wallet endpoint and display the available amount.
 
