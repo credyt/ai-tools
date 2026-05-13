@@ -7,7 +7,9 @@ description: Wire Credyt billing into your application code. Adds customer creat
 
 Help the user wire Credyt into their application code. This skill works with the user's actual codebase — reading their existing code and adding Credyt integration in the right places.
 
-The full integration guide is at [docs.credyt.ai/ai-integration.md](https://docs.credyt.ai/ai-integration.md). SDK references with code examples are at [docs.credyt.ai/sdk](https://docs.credyt.ai/sdk).
+The full integration guide is at [docs.credyt.ai/ai-integration.md](https://docs.credyt.ai/ai-integration.md). Each section below links to its dedicated docs page, which includes HTTP, TypeScript, and Python examples — consult these if you need more detail on any integration area.
+
+> **Field naming:** The Credyt API uses `snake_case` for all fields. The TypeScript SDK maps these to `camelCase` automatically. The Python SDK keeps `snake_case`. Code samples in the linked docs show all three.
 
 ## Understand the codebase first
 
@@ -21,15 +23,26 @@ Check for:
 - Where the billable activities happen in their code
 - Existing environment variable patterns
 
-## SDK or direct HTTP?
+## Choose the integration approach
 
-Based on the user's stack, recommend the appropriate integration approach. Default to the SDK — it handles auth, serialisation, and error shaping for you:
+Determine the right approach from context — only ask the user if you genuinely cannot tell.
 
+**Auto-detect (in order):**
+
+1. **Known AI platform** — Lovable, Bolt, Replit, and V0 all default to TypeScript. If running in one of these, use the TypeScript SDK.
+2. **Existing tech stack** — check the codebase scanned above. `package.json` → TypeScript/Node.js SDK. `requirements.txt` or `pyproject.toml` → Python SDK.
+3. **Unclear** → ask: *"Are you working in TypeScript/Node.js, Python, or another language?"* and lead with SDK options for the first two.
+
+Once determined, state the recommendation and give the user the option to override before writing any code:
+
+> "Based on your stack, I'll use the **TypeScript SDK** (`@credyt/api-client`). Let me know if you'd prefer Python or direct HTTP calls."
+
+SDK packages:
 - **TypeScript/Node.js** → `@credyt/api-client` (`npm install @credyt/api-client`)
 - **Python** → `credyt-api` (`pip install credyt-api`)
 - **Other language or preference for raw HTTP** → direct API calls with the `X-CREDYT-API-KEY` header
 
-Ask if they'd prefer to use the SDK or hand-roll the HTTP calls. For TypeScript and Python users, lead with the SDK. The full SDK reference with examples for all three approaches is at [docs.credyt.ai/sdk](https://docs.credyt.ai/sdk).
+The full SDK reference with examples for all three approaches is at [docs.credyt.ai/sdk](https://docs.credyt.ai/sdk).
 
 ## Integration areas
 
@@ -57,53 +70,53 @@ client = CredytApiClient(
 )
 ```
 
-**Direct HTTP:** Attach `X-CREDYT-API-KEY: <key>` to every request. Show them how to create a helper function or configured HTTP client instance that sets this header automatically.
+**Direct HTTP:** Attach `X-CREDYT-API-KEY: <key>` to every request. Create a helper function or configured HTTP client instance that sets this header automatically.
 
-### 2. Customer creation (registration flow)
+### 2. Customer creation — [docs](https://docs.credyt.ai/quickstart/customers)
 
 When a new user signs up in their app, create a matching Credyt customer. Find their registration/signup handler and add customer creation after successful account creation.
 
 Key points:
-- Use `externalId` / `external_id` to link the Credyt customer to their app's user ID
+- Use `external_id` to link the Credyt customer to their app's user ID
 - Subscribe the customer to the relevant products during creation
 - Store the Credyt customer ID in their database alongside the user record
-- Handle the case where the customer already exists (409/422 — look up by external_id instead)
+- Handle the case where the customer already exists (409/422 — look up by `external_id` instead)
 
-**SDK method:** `client.customers.create({ name, externalId, email, subscriptions })` (TS) or `client.customers.create(body={...})` (Python).
+**SDK method:** `client.customers.create(...)`
 
 **Recurring fixed fees — pending subscriptions**
 
 If the product uses a recurring fixed fee (e.g. $20/month), the customer must pay upfront before their subscription activates. In this case the API returns a `pending` status rather than activating immediately.
 
-Set `returnUrl` / `return_url`, `failureUrl` / `failure_url`, and `redirectTo` / `redirect_to` on the subscription so Credyt knows where to send the customer after payment — before you ever redirect them anywhere:
+Set `return_url`, `failure_url`, and `redirect_to` on the subscription so Credyt knows where to send the customer after payment:
 
-- `returnUrl` — where to send the customer after successful payment (e.g. `https://yourapp.com/account`)
-- `failureUrl` — where to send them if payment fails (e.g. `https://yourapp.com/callbacks/payment-failed`)
-- `redirectTo` — set to `"return_url"` so the customer lands back on your site instead of staying in the Credyt billing portal (this is the default, but set it explicitly)
+- `return_url` — where to send the customer after successful payment (e.g. `https://yourapp.com/account`)
+- `failure_url` — where to send them if payment fails (e.g. `https://yourapp.com/callbacks/payment-failed`)
+- `redirect_to` — set to `"return_url"` so the customer lands back on your site instead of staying in the Credyt billing portal (this is the default, but set it explicitly)
 
 When the response status is `pending`:
 - Check the `required_actions` array for an action with `type: "payment"` and extract its `redirect_url`
-- Redirect the customer to that URL — Credyt will handle the payment form and route them to your `returnUrl` or `failureUrl` automatically
+- Redirect the customer to that URL — Credyt will handle the payment form and route them to your `return_url` or `failure_url` automatically
 - Do not activate the user's account yet — store it as pending in your database until payment is confirmed
 - If the redirect link expires before the customer completes payment, fetch the customer by their Credyt ID to get a refreshed link
 
 Once the customer pays, Credyt fires a `subscription.activated` webhook. Listen for this event on your backend and use it to activate the user's account.
 
-### 3. Usage event tracking
+### 3. Usage event tracking — [docs](https://docs.credyt.ai/quickstart/usage-events)
 
 Find where the billable activities happen in their code and add event submission after each one. Each event needs:
 
 - A unique ID (UUID) so the same event can't be billed twice
-- The correct `eventType` / `event_type` matching the product configuration
-- A timestamp of when it happened (`occurredAt` / `occurred_at`)
+- The correct `event_type` matching the product configuration
+- A timestamp of when it happened (`occurred_at`)
 - Any data fields needed for pricing (volume fields, dimensions)
 
-**SDK method:** `client.events.sendUsage(customerId, { events })` (TS) or `client.events.send_usage(body={ customer_id, events })` (Python).
+**SDK method:** `client.events.sendUsage(...)` (TS) or `client.events.send_usage(...)` (Python).
 
 For **volume-based** products, the event data must include the volume field (e.g., `total_tokens: 1500`).
 For **dimensional** products, include the dimension values (e.g., `model: "gpt-4"`).
 
-### 4. Cost tracking (if they set up vendors)
+### 4. Cost tracking — [docs](https://docs.credyt.ai/quickstart/cost-tracking)
 
 If the user set up vendors in `/credyt:billing-setup`, add cost data to usage events. Each event can include a `costs` array with the vendor ID, the amount it cost, and the currency.
 
@@ -111,7 +124,7 @@ This is typically added right after the billable action completes, when the cost
 
 > "Even if you're not charging users yet, attaching costs to every event lets Credyt calculate your unit economics so you can make pricing decisions based on real data."
 
-### 5. Balance checks (pre-action gating)
+### 5. Balance checks — [docs](https://docs.credyt.ai/quickstart/wallets)
 
 Before expensive operations, check the customer's wallet balance. If insufficient, block the action and prompt the user to top up.
 
@@ -119,28 +132,28 @@ Before expensive operations, check the customer's wallet balance. If insufficien
 
 Find where billable actions are initiated (API routes, button handlers, etc.) and add a balance check before the action runs. Return a clear message if the balance is too low.
 
-Show them how to estimate the cost of the upcoming action and compare it against the available balance.
+Estimate the cost of the upcoming action and compare it against the available balance.
 
-### 6. Billing portal / top-up UI
+### 6. Billing portal / top-up UI — [docs](https://docs.credyt.ai/quickstart/billing-portal)
 
 Help users add funds through Credyt's billing portal. This is the simplest way to handle payments — Credyt hosts the page, handles Stripe, and redirects back to their app.
 
 Add a "Billing" or "Add funds" link/button in their app's settings or account page. When clicked, the backend creates a billing portal session and redirects the user to the URL.
 
-**SDK method:** `client.billingPortal.createPortalSession({ customerId, returnUrl, failureUrl })` (TS) or the equivalent Python method.
+**SDK method:** `client.billingPortal.createPortalSession(...)`
 
 Key points:
 - Portal sessions expire after 10 minutes
-- Set a `returnUrl` / `return_url` for where to send users after they're done
-- Set a `failureUrl` / `failure_url` for payment failures
+- Set `return_url` for where to send users after they're done
+- Set `failure_url` for payment failures
 
-### 7. Balance display
+### 7. Balance display — [docs](https://docs.credyt.ai/quickstart/wallets)
 
 Show the user's current balance in the app UI. Fetch from the wallet endpoint and display the available amount.
 
 **SDK method:** `client.wallets.customerWalletOps.getCustomerWallet(customerId)`.
 
-Consider where this fits in their app — sidebar, header, account page — and add it there.
+Decide where this fits in their app — sidebar, header, account page — and add it there.
 
 ## Implementation approach
 
