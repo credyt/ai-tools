@@ -240,3 +240,15 @@ Summarize what was created and verified, then suggest next steps:
 > - [List vendors if created]
 >
 > Run `/credyt:billing-integration` when you're ready to wire this into your app, or `/credyt:billing-setup` again to add more products."
+
+## Next step
+
+This skill only configures products and pricing. Do not write integration code yourself — SDK shapes, endpoints, and auth headers are easy to guess wrong.
+
+Run the `billing-integration` skill next. If it is not installed, ask the user to install it:
+
+> "Run `npx skills add credyt/ai-tools`, then ask me to run the billing-integration skill."
+
+If the skill is not available and the user has not explicitly asked you to write integration code, stop here and wait for them to install it. Do not hand-roll fetch calls or invent API endpoints.
+
+The SDK packages are `@credyt/api-client` (TypeScript/Node.js) and `credyt-api` (Python). These are the only supported ways to call the Credyt API from application code.
