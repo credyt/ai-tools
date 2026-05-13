@@ -5,6 +5,8 @@ description: Wire Credyt billing into your application code. Adds customer creat
 
 # Credyt Integrate
 
+> **Prefer the official SDKs** (`@credyt/api-client` for TypeScript, `credyt-api` for Python) over hand-rolling HTTP calls — they handle auth, retries, and field mapping for you. If neither SDK suits your stack (e.g. a language other than TypeScript or Python), HTTP direct calls are also covered below. If you arrived here without running `billing-setup` first, stop and ask the user to run that skill before proceeding.
+
 Help the user wire Credyt into their application code. This skill works with the user's actual codebase — reading their existing code and adding Credyt integration in the right places.
 
 The full integration guide is at [docs.credyt.ai/ai-integration.md](https://docs.credyt.ai/ai-integration.md). Each section below links to its dedicated docs page, which includes HTTP, TypeScript, and Python examples — consult these if you need more detail on any integration area.
